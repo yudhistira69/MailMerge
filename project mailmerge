@@ -1,0 +1,165 @@
+import pandas as pd
+import os
+import sys
+
+from docxtpl import DocxTemplate
+
+# -------------------------------------------------------
+# ----------------------Read Excel-----------------------
+
+dfr = pd.read_excel(str(input('Masukkan nama file excel : '))+'.xlsx', sheet_name=str(input('Masukkan nama sheet : ')) )
+dfr = dfr.iloc[3:,7:17]
+dfr.columns = dfr.iloc[0]
+dfr = dfr.iloc[1:]
+df0 = dfr['Base Line Status']
+df0 = df0.dropna() # Delete rows with NaN Data
+df1 = dfr.iloc[0:df0.shape[0]+1] # Taking 10 rows below as the data
+df = df1[['region_name','Subsegment Baseline','bill_name','Customer_Id','Customer_Name','Base Line Status','Joint Date','Longitude','Latitude','Address']] # Taking 3 Essential column
+
+
+# -------------------------------------------------------
+# --------------------Separate data----------------------
+
+def pemisahan_data(Data_yang_digunakan,Kolom_data_yang_Dipisah,Jenis_data_yang_dipisah,Keluaran):
+    j = Data_yang_digunakan
+    k = Kolom_data_yang_Dipisah
+    l = Jenis_data_yang_dipisah
+    m = Keluaran
+    data_1 = []
+    data_2 = []
+    for i in range(0, len((j.iloc[:, [k]]))):
+        c = j.iloc[i, [k]].values
+        if c == l:
+            data_1.append(j.iloc[i])
+        else:
+            data_2.append(j.iloc[i])
+    data_1 = pd.DataFrame(data_1)
+    data_2 = pd.DataFrame(data_2)
+    if m == 1:
+        return(data_1)
+    else:
+        return(data_2)
+# # contoh_pemisahan_data
+# # pemisahan_data(df,1,'L4',0)
+
+Data_naik = pemisahan_data(df,5,'NOO',1)
+Data_naik.columns = ['region_name','Subsegment Baseline','bill_name','Customer_Id','Customer_Name','Base Line Status','Joint Date','Longitude','Latitude','Address']
+Data_turun = pemisahan_data(df,5,'NOO',0)
+Data_turun.columns =['region_name','Subsegment Baseline','bill_name','Customer_Id','Customer_Name','Base Line Status','Joint Date','Longitude','Latitude','Address']
+
+# contoh_penggunaan
+# read_excel('NEW BA AHS 2.0 LMS OKT 2022.xlsx','Nama','Kode SubSegment Baru', 'Kode SubSegment Lama')
+
+fname2=r"/Users/intern danone/project mail word/formatdocx_2.docx"
+
+os.chdir(r"/Users/intern danone/project mail word/outputformat")
+
+df = Data_naik
+No = []
+for x in range(0,df.shape[0]+1):
+    No.append('11 November 2022')
+No = (pd.DataFrame(No))
+No.columns=['Date']
+No=No["Date"].values
+
+
+region_name=df['region_name'].values
+Subsegment_Baseline=df['Subsegment Baseline'].values
+bill_name=df['bill_name'].values
+Customer_Id=df['Customer_Id'].values
+Customer_Name=df['Customer_Name'].values
+Base_Line_Status=df['Base Line Status'].values
+Joint_Date=df['Joint Date'].values
+Longitude=df['Longitude'].values
+Latitude=df['Latitude'].values
+Address=df['Address'].values
+
+yy = int(input('dokumen yang ingin dibuat: 0 = Segmen, 1 = Cluster, 2 = NOO = '))
+
+if yy == 0 :
+    ps = []
+    for x in range(0,df.shape[0]+1):
+        ps.append('\u2713')
+    ps = (pd.DataFrame(ps))
+    ps.columns=['Check']
+    ps=ps["Check"].values
+    zipped=zip(No,Subsegment_Baseline,bill_name,Customer_Id,Customer_Name,Longitude,Latitude,Address,ps)
+    for a,b,c,d,e,g,h,i,j in zipped:
+
+        doc=DocxTemplate(fname2)
+
+        context={"No":a,"Subsegment_Baseline":b,"bill_name":c,"Customer_Id":d,"Customer_Name":e,"Longitude":g,"Latitude":h,"Address":i,"ps":j}
+
+        doc.render(context)
+        doc.save('{}.docx'.format(d))
+elif yy == 1 :
+    pc = []
+    for x in range(0,df.shape[0]+1):
+        pc.append('\u2713')
+    pc = (pd.DataFrame(pc))
+    pc.columns=['Check']
+    pc=pc["Check"].values
+    zipped=zip(No,Subsegment_Baseline,bill_name,Customer_Id,Customer_Name,Longitude,Latitude,Address,pc)
+    for a,b,c,d,e,g,h,i,j in zipped:
+
+        doc=DocxTemplate(fname2)
+
+        context={"No":a,"Subsegment_Baseline":b,"bill_name":c,"Customer_Id":d,"Customer_Name":e,"Longitude":g,"Latitude":h,"Address":i,"pc":j}
+
+        doc.render(context)
+        doc.save('{}.docx'.format(d))
+elif yy == 2:
+    no = []
+    for x in range(0,df.shape[0]+1):
+        no.append('\u2713')
+    no = (pd.DataFrame(no))
+    no.columns=['Check']
+    no=no["Check"].values
+    zipped=zip(No,Subsegment_Baseline,bill_name,Customer_Id,Customer_Name,Longitude,Latitude,Address,no)
+    for a,b,c,d,e,g,h,i,j in zipped:
+
+        doc=DocxTemplate(fname2)
+
+        context={"No":a,"Subsegment_Baseline":b,"bill_name":c,"Customer_Id":d,"Customer_Name":e,"Longitude":g,"Latitude":h,"Address":i,"no":j}
+
+        doc.render(context)
+        doc.save('{}.docx'.format(d))
+
+# -------------------------------------------------------------------
+# ---------------------------Berita acara----------------------------
+
+
+from docx import Document
+from docx.shared import Cm
+import pandas
+import numpy as np
+
+document = Document()
+
+style = document.styles['Normal']
+style.font.name = 'Calibri'
+#     -------------------------------------------------------------------
+document.add_heading('BERITA ACARA/SUMMARY PERUBAHAN SEGMENT & CLUSTER' ,level=1)
+
+document.add_paragraph('Kepada : \nPeriha : \nTanggal : ')
+document.add_paragraph('Dengan ini kami sampaikan summary dari pengajuan update massal segment & cluster pelanggan\nsbb: ')
+
+
+# --------------------------------------------------------------------
+table = document.add_table(Data_turun.shape[0]+1, Data_turun.shape[1]) #df.shape[0] = Jumlah Row , df.shape[1] = jumlah column
+table.style = 'Table Grid'
+
+# -------------------------------------------------------------------------------------------------
+
+for j in range(Data_turun.shape[-1]):
+    table.cell(0,j).text = Data_turun.columns[j]
+
+# -------------------------------------------------------------------------------------------------
+
+for i in range(Data_turun.shape[0]):
+    for j in range(Data_turun.shape[-1]):
+        table.cell(i+1,j).text = str(Data_turun.values[i,j])
+
+
+document.save("BERITA ACARA FROM EXCEL TO WORD.docx")
+print("All Files done")
